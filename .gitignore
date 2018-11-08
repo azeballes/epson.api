@@ -1,0 +1,13 @@
+﻿################################################################################
+# Este archivo .gitignore ha sido creado automáticamente por Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/Epson.Api/v15/Server/sqlite3
+/Scanner.Api/bin
+/Scanner.Api/obj/Debug
+/Scanner.Api/obj/Release
+/Scanner.Driver/bin
+/Scanner.Driver/obj/Debug
+/Scanner.Driver/obj/Release
+/Scanner.Host/bin
+/Scanner.Host/obj
