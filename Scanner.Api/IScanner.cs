@@ -1,5 +1,6 @@
 ﻿using System.ServiceModel;
 using System.ServiceModel.Web;
+using Scanner.Driver;
 
 namespace Scanner.Api
 {
@@ -12,10 +13,16 @@ namespace Scanner.Api
         Result ConnectionStatus();
 
         [OperationContract]
-        [WebInvoke(Method = "POST", UriTemplate = "conectar", ResponseFormat = WebMessageFormat.Json)]
+        [WebGet(UriTemplate = "conectar", ResponseFormat = WebMessageFormat.Json)]
         Result Connect();
 
-        [WebInvoke(Method = "POST", UriTemplate = "desconectar", ResponseFormat = WebMessageFormat.Json)]
+        [OperationContract]
+        //[WebInvoke(Method = "POST", UriTemplate = "conectar", ResponseFormat = WebMessageFormat.Json)]
+        [WebGet(UriTemplate = "digitalizar", ResponseFormat = WebMessageFormat.Json)]
+        Result Scan();
+
+        [OperationContract]
+        [WebGet(UriTemplate = "desconectar", ResponseFormat = WebMessageFormat.Json)]
         Result Disconnect();
 
         [OperationContract]

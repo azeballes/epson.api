@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using com.epson.bank.driver;
+using Color = com.epson.bank.driver.Color;
 
 namespace Scanner.Driver
 {
@@ -11,6 +13,7 @@ namespace Scanner.Driver
         private readonly MFScan _mObjmfScanBack;
         private readonly MFMicr _mObjmfMicr;
         private readonly MFProcess _mObjmfProcess;
+        private IList<Document> _documents;
 
         public EpsonDigitalizer()
         {
@@ -21,10 +24,12 @@ namespace Scanner.Driver
             _mObjmfMicr = new MFMicr();
             _mObjmfProcess = new MFProcess();
             _mObjmfDevice.SCNMICRStatusCallback += ScnmicrSetStatusBack;
+            _documents = new List<Document>();
         }
 
-        private static void ScnmicrSetStatusBack(int iTransactionNumber, MainStatus mainStatus, ErrorCode subStatus, string portName)
+        private void ScnmicrSetStatusBack(int iTransactionNumber, MainStatus mainStatus, ErrorCode subStatus, string portName)
         {
+            ErrorCode ret;
             switch (mainStatus)
             {
                 case MainStatus.MF_FUNCTION_START:
@@ -32,15 +37,44 @@ namespace Scanner.Driver
                 case MainStatus.MF_CHECKPAPER_PROCESS_START:
                     break;
                 case MainStatus.MF_DATARECEIVE_START:
+                    _documents.Add( new Document() );
                     break;
                 case MainStatus.MF_DATARECEIVE_DONE:
+                    var document = _documents[_documents.Count - 1];
+                    document.Cmc7 = "";
+                    document.Id = _mObjmfDevice.TransactionNumber;
+                    ret = _mObjmfDevice.GetMicrText(iTransactionNumber, _mObjmfMicr);
+                    if (ret != ErrorCode.ERR_MICR_NODATA)
+                    {
+                        if (!string.IsNullOrEmpty(_mObjmfMicr.MicrStr))
+                        {
+                            document.Cmc7 = _mObjmfMicr.MicrStr.Substring(0, _mObjmfMicr.MicrStr.IndexOf('\0'));
+                            document.Cmc7 = document.Cmc7.Trim();
+                        }
+                    }
+                    byte[][] aux;
+                    if (_mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_FRONT) == ErrorCode.SUCCESS
+                        && _mObjmfDevice.GetScanImage(iTransactionNumber, _mObjmfScanFront) == ErrorCode.SUCCESS
+                        && _mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_BACK) == ErrorCode.SUCCESS
+                        && _mObjmfDevice.GetScanImage(iTransactionNumber, _mObjmfScanBack) == ErrorCode.SUCCESS)
+                    {
+                        aux = new byte[2][];
+                        aux[0] = new byte[_mObjmfScanFront.Data.Length];
+                        _mObjmfScanFront.Data.Read(aux[0], 0, aux[0].Length);
+                        aux[1] = new byte[_mObjmfScanBack.Data.Length];
+                        _mObjmfScanBack.Data.Read(aux[1], 0, aux[1].Length);
+                        document.RawImage = TiffUtil.mergeTiffPages(aux);
+                    }
                     break;
                 case MainStatus.MF_CHECKPAPER_PROCESS_DONE:
                     break;
                 case MainStatus.MF_FUNCTION_DONE:
+                    Scan();
                     break;
                 case MainStatus.MF_ERROR_OCCURED:
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mainStatus), mainStatus, null);
             }
         }
 
@@ -55,8 +89,9 @@ namespace Scanner.Driver
         private void ConfigureMulti()
         {
             // Base
+            _mObjmfBase.Timeout = 0;
             CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfBase, FunctionType.MF_GET_BASE_DEFAULT));
-            _mObjmfBase.Timeout = 1;
+            
             CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfBase, FunctionType.MF_SET_BASE_PARAM));
 
 
@@ -111,5 +146,12 @@ namespace Scanner.Driver
             _mObjmfDevice.SCNMICRCancelStatusBack();
             _mObjmfDevice.CloseMonPrinter();
         }
+
+        public void Scan()
+        {
+            CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(FunctionType.MF_EXEC));
+        }
+
+        public IList<Document> Documents => _documents;
     }
 }

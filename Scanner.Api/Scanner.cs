@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.IO;
 using Scanner.Driver;
@@ -7,7 +8,7 @@ namespace Scanner.Api
 {
     public class Scanner : IScanner
     {
-        private IDigitalizer _digitalizer = new EpsonDigitalizer();
+        static IDigitalizer _digitalizer;
 
         public Scanner()
         {
@@ -18,8 +19,21 @@ namespace Scanner.Api
             context.OutgoingResponse.Headers.Add("Access-Control-Allow-Headers", "*");
         }
 
-        public Result Connect() => ConnectionAction(@"Conectar", "Conexión OK", () => _digitalizer.Connect());
-        
+        public Result Connect() => ConnectionAction(@"Conectar", "Conexión OK", () =>
+        {
+            if (_digitalizer != null) 
+                return;
+            _digitalizer = new EpsonDigitalizer();
+            _digitalizer.Connect();
+        });
+
+        public Result Scan() => ConnectionAction(@"Digitalizar", "Digitalización OK", () =>
+        {
+            if (_digitalizer == null)
+                throw new Exception("Digitalizadora no conectada");
+            _digitalizer.Scan();
+        });
+
         private static Result Result(string description, int code)
         {
             var result = new Result
@@ -41,7 +55,13 @@ namespace Scanner.Api
             return result;
         }
 
-        public Result Disconnect() => ConnectionAction(@"Desconectar", "Desconexión OK", () => _digitalizer.Disconnect());
+        public Result Disconnect() => ConnectionAction(@"Desconectar", "Desconexión OK", () =>
+        {
+            if (_digitalizer == null)
+                return;
+            _digitalizer.Disconnect();
+            _digitalizer = null;
+        });
 
         private static Result ConnectionAction(string message, string messageOk, Action action)
         {
@@ -62,33 +82,16 @@ namespace Scanner.Api
         public Document [] Documents()
         {
             Console.WriteLine(@"Documents");
-            return new []
+            if (_digitalizer == null)
+                return new Document[] { };
+            var ret = new List<Document>();
+            foreach (var digitalizerDocument in _digitalizer.Documents)
             {
-                new Document()
-                {
-                    Id = 1,
-                    Cmc7 = Resource1.Cmc7_1,
-                    Image = Base64Image()
-                }
-            };
+                ret.Add(new Document(digitalizerDocument));
+            }
+            return ret.ToArray();
         }
 
-        private static string Base64Image()
-        {
-            var memoryStream = new MemoryStream();
-            Resource1.ChequeJPG.Save(memoryStream, ImageFormat.Jpeg);
-            var buffer = new byte[memoryStream.Length];
-            memoryStream.Position = 0;
-            memoryStream.Read(buffer, 0, buffer.Length);
-            memoryStream.Close();
-            return "data:image/jpeg;base64, " + Convert.ToBase64String(buffer);
-        }
-    }
-
-    public class Document
-    {
-        public int Id { get; set; }
-        public string Cmc7 { get; set; }
-        public string Image { get; set; }
+        
     }
 }

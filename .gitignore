@@ -11,3 +11,4 @@
 /Scanner.Driver/obj/Release
 /Scanner.Host/bin
 /Scanner.Host/obj
+*.suo
