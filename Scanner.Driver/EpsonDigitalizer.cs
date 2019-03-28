@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using com.epson.bank.driver;
 using Color = com.epson.bank.driver.Color;
 
@@ -13,7 +14,8 @@ namespace Scanner.Driver
         private readonly MFScan _mObjmfScanBack;
         private readonly MFMicr _mObjmfMicr;
         private readonly MFProcess _mObjmfProcess;
-        private IList<Document> _documents;
+        private readonly IList<Document> _documents;
+        private Mutex _mutex;
 
         public EpsonDigitalizer()
         {
@@ -25,6 +27,7 @@ namespace Scanner.Driver
             _mObjmfProcess = new MFProcess();
             _mObjmfDevice.SCNMICRStatusCallback += ScnmicrSetStatusBack;
             _documents = new List<Document>();
+            _mutex = new Mutex(false);
         }
 
         private void ScnmicrSetStatusBack(int iTransactionNumber, MainStatus mainStatus, ErrorCode subStatus, string portName)
@@ -37,12 +40,13 @@ namespace Scanner.Driver
                 case MainStatus.MF_CHECKPAPER_PROCESS_START:
                     break;
                 case MainStatus.MF_DATARECEIVE_START:
+                    _mutex.WaitOne(-1);
                     _documents.Add( new Document() );
                     break;
                 case MainStatus.MF_DATARECEIVE_DONE:
                     var document = _documents[_documents.Count - 1];
                     document.Cmc7 = "";
-                    document.Id = _mObjmfDevice.TransactionNumber;
+                    document.Id = iTransactionNumber;
                     ret = _mObjmfDevice.GetMicrText(iTransactionNumber, _mObjmfMicr);
                     if (ret != ErrorCode.ERR_MICR_NODATA)
                     {
@@ -52,19 +56,20 @@ namespace Scanner.Driver
                             document.Cmc7 = document.Cmc7.Trim();
                         }
                     }
-                    byte[][] aux;
-                    if (_mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_FRONT) == ErrorCode.SUCCESS
+                    /*if (_mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_FRONT) == ErrorCode.SUCCESS
                         && _mObjmfDevice.GetScanImage(iTransactionNumber, _mObjmfScanFront) == ErrorCode.SUCCESS
                         && _mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_BACK) == ErrorCode.SUCCESS
-                        && _mObjmfDevice.GetScanImage(iTransactionNumber, _mObjmfScanBack) == ErrorCode.SUCCESS)
+                        && _mObjmfDevice.GetScanImage(iTransactionNumber, _mObjmfScanBack) == ErrorCode.SUCCESS)*/
+                    if (_mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_FRONT) == ErrorCode.SUCCESS
+                        && _mObjmfDevice.GetScanImage(iTransactionNumber, _mObjmfScanFront) == ErrorCode.SUCCESS)
                     {
-                        aux = new byte[2][];
-                        aux[0] = new byte[_mObjmfScanFront.Data.Length];
-                        _mObjmfScanFront.Data.Read(aux[0], 0, aux[0].Length);
-                        aux[1] = new byte[_mObjmfScanBack.Data.Length];
-                        _mObjmfScanBack.Data.Read(aux[1], 0, aux[1].Length);
-                        document.RawImage = TiffUtil.mergeTiffPages(aux);
+                            document.RawImageFront = new byte[_mObjmfScanFront.Data.Length];
+                        _mObjmfScanFront.Data.Read(document.RawImageFront, 0, document.RawImageFront.Length);
+                        //document.RawImageBack = new byte[_mObjmfScanBack.Data.Length];
+                        //_mObjmfScanBack.Data.Read(document.RawImageBack, 0, document.RawImageBack.Length);
+                        //document.RawImage = TiffUtil.mergeTiffPages(aux);
                     }
+                    _mutex.ReleaseMutex();
                     break;
                 case MainStatus.MF_CHECKPAPER_PROCESS_DONE:
                     break;
@@ -72,6 +77,7 @@ namespace Scanner.Driver
                     Scan();
                     break;
                 case MainStatus.MF_ERROR_OCCURED:
+                    _mutex.ReleaseMutex();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mainStatus), mainStatus, null);
@@ -91,22 +97,28 @@ namespace Scanner.Driver
             // Base
             _mObjmfBase.Timeout = 0;
             CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfBase, FunctionType.MF_GET_BASE_DEFAULT));
-            
             CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfBase, FunctionType.MF_SET_BASE_PARAM));
-
 
             // ScanFront
             CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfScanFront, FunctionType.MF_GET_SCAN_FRONT_DEFAULT));
             CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfScanFront, FunctionType.MF_SET_SCAN_FRONT_PARAM));
 
             CheckResponse(_mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_FRONT));
-            CheckResponse(_mObjmfDevice.SCNSetImageQuality(ColorDepth.EPS_BI_SCN_1BIT, 0D, Color.EPS_BI_SCN_MONOCHROME, ExOption.EPS_BI_SCN_SHARP));
-            CheckResponse(_mObjmfDevice.SCNSetImageFormat(Format.EPS_BI_SCN_TIFF));
+            //CheckResponse(_mObjmfDevice.SCNSetImageQuality(ColorDepth.EPS_BI_SCN_1BIT, 0D, Color.EPS_BI_SCN_MONOCHROME, ExOption.EPS_BI_SCN_SHARP));
+            CheckResponse(_mObjmfDevice.SCNSetImageQuality(ColorDepth.EPS_BI_SCN_8BIT, 0D, Color.EPS_BI_SCN_MONOCHROME, ExOption.EPS_BI_SCN_SHARP));
+            //CheckResponse(_mObjmfDevice.SCNSetImageFormat(Format.EPS_BI_SCN_TIFF));
+            CheckResponse(_mObjmfDevice.SCNSetImageFormat(Format.EPS_BI_SCN_JPEGLOW));
 
 
             // ScanBack
-            CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfScanBack, FunctionType.MF_GET_SCAN_BACK_DEFAULT));
-            CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfScanBack, FunctionType.MF_SET_SCAN_BACK_PARAM));
+            //CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfScanBack, FunctionType.MF_GET_SCAN_BACK_DEFAULT));
+            //CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfScanBack, FunctionType.MF_SET_SCAN_BACK_PARAM));
+
+            //CheckResponse(_mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_BACK));
+            //CheckResponse(_mObjmfDevice.SCNSetImageQuality(ColorDepth.EPS_BI_SCN_1BIT, 0D, Color.EPS_BI_SCN_MONOCHROME, ExOption.EPS_BI_SCN_SHARP));
+            //CheckResponse(_mObjmfDevice.SCNSetImageQuality(ColorDepth.EPS_BI_SCN_8BIT, 0D, Color.EPS_BI_SCN_MONOCHROME, ExOption.EPS_BI_SCN_SHARP));
+            //CheckResponse(_mObjmfDevice.SCNSetImageFormat(Format.EPS_BI_SCN_TIFF));
+            //CheckResponse(_mObjmfDevice.SCNSetImageFormat(Format.EPS_BI_SCN_JPEGLOW));
 
             // Micr
             CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfMicr, FunctionType.MF_GET_MICR_DEFAULT));
@@ -114,8 +126,6 @@ namespace Scanner.Driver
             _mObjmfMicr.MicrOcrSelect = MfMicrType.MF_MICR_USE_MICR;
             _mObjmfMicr.Parsing = false;
             CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfMicr, FunctionType.MF_SET_MICR_PARAM));
-
-
             
             // Operational settings when an error occurs
             // Process
@@ -138,6 +148,7 @@ namespace Scanner.Driver
             CheckResponse(_mObjmfDevice.OpenMonPrinter(OpenType.TYPE_PRINTER, "TM-S1000U"));
             CheckResponse(_mObjmfDevice.SCNMICRSetStatusBack());
             ConfigureMulti();
+            Scan();
         }
 
         public void Disconnect()
@@ -147,11 +158,20 @@ namespace Scanner.Driver
             _mObjmfDevice.CloseMonPrinter();
         }
 
-        public void Scan()
+        private void Scan()
         {
             CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(FunctionType.MF_EXEC));
         }
 
-        public IList<Document> Documents => _documents;
+        public IList<Document> Documents
+        {
+            get
+            {
+                _mutex.WaitOne(-1);
+                var docs = _documents;
+                _mutex.ReleaseMutex();
+                return docs;
+            }
+        }
     }
 }

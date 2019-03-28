@@ -10,12 +10,14 @@ namespace Scanner.Api
         {
             Id = document.Id;
             Cmc7 = document.Cmc7;
-            //Base64Image = "data:image/jpeg;base64, " + Convert.ToBase64String(document.RawImage); ;
-            Base64Image = "data:image/tiff;base64, " + Convert.ToBase64String(document.RawImage); ; 
+            const string dataImageJpegBase64 = "data:image/jpeg;base64,";
+            Base64FrontImage = dataImageJpegBase64 + Convert.ToBase64String(document.RawImageFront);
+            //Base64BackImage = dataImageJpegBase64 + Convert.ToBase64String(document.RawImageBack);
         }
         public int Id { get; set; }
         public string Cmc7 { get; set; }
-        public string Base64Image { get; set; }
+        public string Base64FrontImage { get; set; }
+        //public string Base64BackImage { get; set; }
 
     }
 }

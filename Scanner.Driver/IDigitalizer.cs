@@ -6,7 +6,7 @@ namespace Scanner.Driver
     {
         void Connect();
         void Disconnect();
-        void Scan();
+        //void Scan();
         IList<Document> Documents { get; }
     }
 }

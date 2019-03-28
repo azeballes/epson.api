@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing.Imaging;
-using System.IO;
+using System.Linq;
 using Scanner.Driver;
 
 namespace Scanner.Api
@@ -27,12 +25,14 @@ namespace Scanner.Api
             _digitalizer.Connect();
         });
 
+        /*
         public Result Scan() => ConnectionAction(@"Digitalizar", "Digitalización OK", () =>
         {
             if (_digitalizer == null)
                 throw new Exception("Digitalizadora no conectada");
             _digitalizer.Scan();
         });
+        */
 
         private static Result Result(string description, int code)
         {
@@ -44,6 +44,7 @@ namespace Scanner.Api
             return result;
         }
 
+        /*
         public Result ConnectionStatus()
         {
             Console.WriteLine(@"Status");
@@ -54,6 +55,7 @@ namespace Scanner.Api
             };
             return result;
         }
+        */
 
         public Result Disconnect() => ConnectionAction(@"Desconectar", "Desconexión OK", () =>
         {
@@ -82,16 +84,18 @@ namespace Scanner.Api
         public Document [] Documents()
         {
             Console.WriteLine(@"Documents");
-            if (_digitalizer == null)
-                return new Document[] { };
-            var ret = new List<Document>();
-            foreach (var digitalizerDocument in _digitalizer.Documents)
-            {
-                ret.Add(new Document(digitalizerDocument));
-            }
-            return ret.ToArray();
+            return _digitalizer == null ? new Document[] { } :
+                _digitalizer.Documents
+                    .Select(digitalizerDocument => new Document(digitalizerDocument))
+                    .ToArray();
         }
 
-        
+        public Document Document(string id)
+        {
+            Console.WriteLine($@"Documents#{id}");
+            var docs = _digitalizer?.Documents;
+            var index = int.Parse(id)-1;
+            return docs == null || docs.Count <= index ? new Document() : new Document(docs[index]);
+        }
     }
 }
