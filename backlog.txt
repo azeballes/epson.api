@@ -1,0 +1,20 @@
+08:45
+- Creación de proceso batch 08:55
+- Agregar log4net al proyecto 09:11
+- Configuración de appender de consola log4net 09:16
+- Armado bloque principal de ejecución del daemon 10:01
+- Proceso de documentos 10:11
+- Levantar contenedor mysql https://hub.docker.com/_/mysql docker-compose up db adminer 10:32
+- Creación de tabla 10:46 
+
+CREATE TABLE `Scannergeneral` (
+  `ScannerID` bigint(12) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `ScannerFecha` datetime NOT NULL,
+  `Scannercmc7` char(32) NOT NULL,
+  `ScannerFotoFrente` longtext NOT NULL,
+  `ScannerFotoDorso` longtext NOT NULL,
+  `ScannerEstado` int NOT NULL
+) AUTO_INCREMENT=1;
+
+- Configuración del contexto EF/MYSQL
+	- Nuget MySql.Data.Entity / MySql.Data 10:51 -- continuar

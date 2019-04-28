@@ -12,3 +12,6 @@
 /Scanner.Host/bin
 /Scanner.Host/obj
 *.suo
+/Scanner.Batch/bin
+/Scanner.Batch/obj
+/Scanner.Data/obj/Debug
