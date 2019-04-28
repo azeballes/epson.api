@@ -47,22 +47,8 @@
     <Compile Include="Document.cs" />
     <Compile Include="IScanner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resource1.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resource1.resx</DependentUpon>
-    </Compile>
     <Compile Include="Result.cs" />
     <Compile Include="Scanner.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resource1.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resource1.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ChequeJPG.jpg" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Scanner.Driver\Scanner.Driver.csproj">

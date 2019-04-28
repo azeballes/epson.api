@@ -69,6 +69,13 @@ namespace Scanner.Driver
                         //_mObjmfScanBack.Data.Read(document.RawImageBack, 0, document.RawImageBack.Length);
                         //document.RawImage = TiffUtil.mergeTiffPages(aux);
                     }
+
+                    if (_mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_BACK) == ErrorCode.SUCCESS
+                        && _mObjmfDevice.GetScanImage(iTransactionNumber, _mObjmfScanBack) == ErrorCode.SUCCESS)
+                    {
+                        document.RawImageBack = new byte[_mObjmfScanBack.Data.Length];
+                        _mObjmfScanBack.Data.Read(document.RawImageBack, 0, document.RawImageBack.Length);
+                    }
                     _mutex.ReleaseMutex();
                     break;
                 case MainStatus.MF_CHECKPAPER_PROCESS_DONE:
@@ -111,14 +118,14 @@ namespace Scanner.Driver
 
 
             // ScanBack
-            //CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfScanBack, FunctionType.MF_GET_SCAN_BACK_DEFAULT));
-            //CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfScanBack, FunctionType.MF_SET_SCAN_BACK_PARAM));
+            CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfScanBack, FunctionType.MF_GET_SCAN_BACK_DEFAULT));
+            CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfScanBack, FunctionType.MF_SET_SCAN_BACK_PARAM));
 
-            //CheckResponse(_mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_BACK));
+            CheckResponse(_mObjmfDevice.SCNSelectScanFace(ScanSide.MF_SCAN_FACE_BACK));
             //CheckResponse(_mObjmfDevice.SCNSetImageQuality(ColorDepth.EPS_BI_SCN_1BIT, 0D, Color.EPS_BI_SCN_MONOCHROME, ExOption.EPS_BI_SCN_SHARP));
-            //CheckResponse(_mObjmfDevice.SCNSetImageQuality(ColorDepth.EPS_BI_SCN_8BIT, 0D, Color.EPS_BI_SCN_MONOCHROME, ExOption.EPS_BI_SCN_SHARP));
+            CheckResponse(_mObjmfDevice.SCNSetImageQuality(ColorDepth.EPS_BI_SCN_8BIT, 0D, Color.EPS_BI_SCN_MONOCHROME, ExOption.EPS_BI_SCN_SHARP));
             //CheckResponse(_mObjmfDevice.SCNSetImageFormat(Format.EPS_BI_SCN_TIFF));
-            //CheckResponse(_mObjmfDevice.SCNSetImageFormat(Format.EPS_BI_SCN_JPEGLOW));
+            CheckResponse(_mObjmfDevice.SCNSetImageFormat(Format.EPS_BI_SCN_JPEGLOW));
 
             // Micr
             CheckResponse(_mObjmfDevice.SCNMICRFunctionContinuously(_mObjmfMicr, FunctionType.MF_GET_MICR_DEFAULT));
