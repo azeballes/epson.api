@@ -17,4 +17,4 @@ CREATE TABLE `Scannergeneral` (
 ) AUTO_INCREMENT=1;
 
 - Configuración del contexto EF/MYSQL
-	- Nuget MySql.Data.Entity / MySql.Data 10:51 -- continuar
+	- Nuget MySql.Data.Entity / MySql.Data 10:51 -- continuar 18:58 22:40

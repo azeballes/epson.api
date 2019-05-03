@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scanner.Batch", "Scanner.Ba
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scanner.Data", "Scanner.Data\Scanner.Data.csproj", "{FB84BD1D-C5F4-4BE7-8FC6-80D6EE776D97}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scanner.Test", "Scanner.Test\Scanner.Test.csproj", "{103FE407-0272-410A-BF13-8D5FB57F44F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{FB84BD1D-C5F4-4BE7-8FC6-80D6EE776D97}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB84BD1D-C5F4-4BE7-8FC6-80D6EE776D97}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB84BD1D-C5F4-4BE7-8FC6-80D6EE776D97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{103FE407-0272-410A-BF13-8D5FB57F44F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{103FE407-0272-410A-BF13-8D5FB57F44F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{103FE407-0272-410A-BF13-8D5FB57F44F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{103FE407-0272-410A-BF13-8D5FB57F44F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
