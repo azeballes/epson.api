@@ -4,6 +4,7 @@ using Scanner.Driver;
 using System;
 using System.Configuration;
 using System.Threading;
+using Scanner.Image;
 
 namespace Scanner.Batch
 {
@@ -77,9 +78,9 @@ namespace Scanner.Batch
                     context.Save( new Data.Document
                         {
                             Date = DateTime.Now
-                            , BackImage = document.RawImageBack
+                            , BackImage = (new ImageConverter(document.RawImageBack)).Resize()
                             , Cmc7 = document.Cmc7
-                            , FrontImage = document.RawImageFront
+                            , FrontImage = (new ImageConverter(document.RawImageFront)).Resize()
                             , State = 0
                     } );                    
                     break;

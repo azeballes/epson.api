@@ -71,6 +71,10 @@
       <Project>{FBE3AC10-58A2-49B9-8BDA-4543867158A7}</Project>
       <Name>Scanner.Driver</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Scanner.Image\Scanner.Image.csproj">
+      <Project>{43c53014-2d26-4eaf-9297-904111935427}</Project>
+      <Name>Scanner.Image</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
